@@ -17,10 +17,11 @@ fi
 
 
 
-name=`echo $1 | sed 's/(?:(?<protocol>http(?:s?)|ftp)(?:\:\/\/)) (?:(?<usrpwd>\w+\:\w+)(?:\@))? (?<domain>[^/\r\n\:]+)? (?<port>\:\d+)? (?<path>(?:\/.*)*\/)? (?<filename>.*?\.(?<ext>\w{2,4}))? (?<qrystr>\??(?:\w+\=[^\#]+)(?:\&?\w+\=\w+)*)* (?<bkmrk>\#.*)?//'`".torrent"
+name=`echo $1 | sed 's/.*title=//'`".torrent"
 
+
+echo 'input= '$1
 echo $name
-
 
 curl --globoff --compressed -A '$AGENT' -L --post302 $1 > 'torrents/'$name'.tmp'
 cd torrents && mv $name'.tmp' $name

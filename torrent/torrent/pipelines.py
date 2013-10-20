@@ -35,7 +35,7 @@ class TorrentPipeline(object):
 	f = open('torrents/torrents.log','a')
         f.write(title+"\n")
         f.close()
-        path = 'http:'+item['torrent'][0]
+        path = item['torrent'][0]
         subprocess.call(['./curl_torrent.sh', path])
 
 
