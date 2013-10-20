@@ -25,7 +25,8 @@ class KatSpider(BaseSpider):
 	entries = hxs.select('//tr[starts-with(@id,"torrent_category")]')  
         items = []  
         for entry in entries: 
-            item = TorrentItem()  
+            print "entry now = ", entry
+	    item = TorrentItem()  
             item['title'] = entry.select('td[1]/div[2]/a[2]/text()').extract()           
             for s in self.keywords:		
 		if s.lower() in item['title'][0].lower():
