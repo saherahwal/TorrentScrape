@@ -30,10 +30,10 @@ class TorrentPipeline(object):
 
     
     def download_item(self, item):
-        title = item['title'][0]
+        title = item['title'][0]        
 	print 'Downloading ' + title
 	f = open('torrents/torrents.log','a')
-        f.write(title+"\n")
+        f.write(title + "\n")
         f.close()
         path = item['torrent'][0]
         subprocess.call(['./curl_torrent.sh', path])
