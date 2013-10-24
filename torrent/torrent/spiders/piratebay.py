@@ -1,11 +1,13 @@
 import re
 import sys
+import time
 
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from torrent.items import TorrentItem
 from scrapy import log
+from scrapy.http import Request
 
 class PiratebaySpider(CrawlSpider):
     name = 'piratebay'
@@ -46,11 +48,22 @@ class PiratebaySpider(CrawlSpider):
 		item['title'] = entry.select('td[2]/div[1]/a[1]/text()').extract()
 		item['url'] = entry.select('td[2]/div[1]/a[1]/@href').extract()
 		item['torrent'] = entry.select('td[2]/a[starts-with(@title,"Download this torrent")]/@href').extract()
-		size = entry.select('td[2]/font[1]/text()[2]').extract().split(",")[1].split("\xa0")
-		item['size'] = size[0]
-		item['sizeType'] = size[1]
 		item['age'] = entry.select('td[2]/font[1]/text()[1]').extract()
+		if len(item['age']) > 0:
+			item['age'] = item['age'][0].split(",")[0].\
+					replace("Uploaded ", "").\
+					replace("Today", time.strftime("%m-%d-%y")).\
+					encode("utf-8").replace("\xc2\xa0", " ")
 		print item['age']
+		size = entry.select('td[2]/font[1]/text()[2]').extract()
+		if len(size) == 0:
+			size = entry.select('td[2]/font[1]/text()[1]').extract()
+		if len(size) >= 1:
+			size = size[0].split(",")[1].\
+				split(" ")[2].\
+				encode("utf-8").split("\xc2\xa0")
+			item['size'] = size[0]
+			item['sizeType'] = size[1]
 		item['seed'] = entry.select('td[3]/text()').extract()
 		item['leech'] = entry.select('td[4]/text()').extract()
 		yield item
