@@ -14,6 +14,8 @@ class TorrentItem(Item):
     seed = Field()
     leech = Field()
     torrent = Field()
+    website = Field()
+    category = Field()
 
 
 

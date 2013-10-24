@@ -45,6 +45,8 @@ class PiratebaySpider(CrawlSpider):
 	entries = hxs.select('//tr')
 	for entry in entries:
 	        item = TorrentItem()
+		item['website'] = self.url_prefix
+		item['category'] = self.categories[self.cat_idx]
 		item['title'] = entry.select('td[2]/div[1]/a[1]/text()').extract()
 		item['url'] = entry.select('td[2]/div[1]/a[1]/@href').extract()
 		item['torrent'] = entry.select('td[2]/a[starts-with(@title,"Download this torrent")]/@href').extract()
