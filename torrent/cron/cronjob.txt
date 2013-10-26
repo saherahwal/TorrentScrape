@@ -1,1 +1,1 @@
-0 */2 * * * /home/neo/TorrentScrape/torrent/script.sh
+0 */2 * * * path/TorrentScrape/torrent/cron/script.sh
