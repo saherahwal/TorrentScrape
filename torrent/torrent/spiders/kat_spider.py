@@ -41,7 +41,8 @@ class KatSpider(BaseSpider):
             item['torrent'] = entry.select('td[1]/div[1]/a[starts-with(@title,"Download torrent file")]/@href').extract()  
             item['size'] = entry.select('td[2]/text()[1]').extract()  
             item['sizeType'] = entry.select('td[2]/span/text()').extract()  
-            item['age'] = entry.select('td[4]/text()').extract()  
+            item['age'] = entry.select('td[4]/text()').extract()
+	    item['age'] = item['age'][0].encode("utf-8").replace("\xc2\xa0", "")
             item['seed'] = entry.select('td[5]/text()').extract()  
             item['leech'] = entry.select('td[6]/text()').extract()
 	    print "emitting new item with title=", item['title']
