@@ -70,8 +70,9 @@ class PiratebaySpider(CrawlSpider):
 			size = size[0].split(",")[1].\
 				split(" ")[2].\
 				encode("utf-8").split("\xc2\xa0")
+			print size
 			item['size'] = size[0]
-			item['sizeType'] = size[1]
+			item['sizeType'] = size[1].replace("i", "")
 		item['seed'] = entry.select('td[3]/text()').extract()
 		item['leech'] = entry.select('td[4]/text()').extract()
 		yield item

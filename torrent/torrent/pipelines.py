@@ -15,7 +15,7 @@ class TorrentPipeline(object):
     def __init__(self):
         if not os.path.exists('torrents'):
             os.makedirs('torrents')
-        self.f = open('torrents/torrents-' + time.strftime('%H%M-%m-%d-%y') + '.log', 'w+')
+        self.f = open('torrents/torrents-' + time.strftime('%m-%d-%Y-%H%M') + '.log', 'w+')
 #	f.close()
 #	    f = open('torrents/torrents.log', 'w')
 #	    f.close()	
@@ -39,7 +39,7 @@ class TorrentPipeline(object):
 				item[i] = item[i][0]
 			s += item[i].replace(",", "*") + ","
 	#f = open('torrents/torrents.log','a')
-        	self.f.write(s + "\n")
+        	self.f.write(s[:-1] + "\n")
 		self.f.flush()
         #f.close()
 #        path = item['torrent'][0]
