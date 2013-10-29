@@ -53,10 +53,16 @@ class PiratebaySpider(CrawlSpider):
 		item['age'] = entry.select('td[2]/font[1]/text()[1]').extract()
 		if len(item['age']) > 0:
 			item['age'] = item['age'][0].split(",")[0].\
-					replace("Uploaded ", "").\
-					replace("Today", time.strftime("%m-%d-%y")).\
+					replace("Uploaded ", "")
+			if len(item['age']) > 0:
+				item['age'] = item['age'].\
+					replace("Today", time.strftime("%m-%d-%Y", time.gmtime())).\
 					encode("utf-8").replace("\xc2\xa0", " ")
-		print item['age']
+			else:
+				item['age'] = entry.select('td[2]/font[1]/b[1]/text()[1]').extract()
+				item['age'] = item['age'][0].\
+						replace("nbsp;", " ").\
+						encode("utf-8").replace("\xc2\xa0", " ")
 		size = entry.select('td[2]/font[1]/text()[2]').extract()
 		if len(size) == 0:
 			size = entry.select('td[2]/font[1]/text()[1]').extract()
