@@ -1,2 +1,2 @@
 0 */2 * * * /home/neo/TorrentScrape/torrent/cron/script.sh
-12 */19 * * * /home/neo/TorrentScrape/torrent/cron/script-db.sh
+59 */19 * * * /home/neo/TorrentScrape/torrent/cron/script-db.sh
