@@ -1,0 +1,17 @@
+CREATE TABLE `torrents` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `t_website` varchar(45) DEFAULT NULL,
+  `t_category` varchar(20) DEFAULT NULL,
+  `t_title` varchar(90) DEFAULT NULL,
+  `t_url` varchar(150) DEFAULT NULL,
+  `t_age` varchar(30) DEFAULT NULL,
+  `t_seed` varchar(10) DEFAULT NULL,
+  `t_sizeType` varchar(5) DEFAULT NULL,
+  `t_torrent` varchar(100) DEFAULT NULL,
+  `t_leech` varchar(10) DEFAULT NULL,
+  `t_size` varchar(10) DEFAULT NULL,
+  `t_date` date DEFAULT NULL,
+  `t_time` time DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
