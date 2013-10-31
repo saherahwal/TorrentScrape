@@ -7,7 +7,7 @@ CREATE TABLE `torrents` (
   `t_age` varchar(30) DEFAULT NULL,
   `t_seed` varchar(10) DEFAULT NULL,
   `t_sizeType` varchar(5) DEFAULT NULL,
-  `t_torrent` varchar(100) DEFAULT NULL,
+  `t_torrent` varchar(150) DEFAULT NULL,
   `t_leech` varchar(10) DEFAULT NULL,
   `t_size` varchar(10) DEFAULT NULL,
   `t_date` date DEFAULT NULL,
