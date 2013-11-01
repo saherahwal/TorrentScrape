@@ -36,6 +36,8 @@ class KatSpider(BaseSpider):
         items = []  
         for entry in entries: 
             item = TorrentItem()  
+	    item['website'] = self.url_prefix
+	    item['category'] = self.current_category	
             item['title'] = entry.select('td[1]/div[2]/a[2]/text()').extract()           
             item['url'] = entry.select('td[1]/div[2]/a[2]/@href').extract()  
             item['torrent'] = entry.select('td[1]/div[1]/a[starts-with(@title,"Download torrent file")]/@href').extract()  
