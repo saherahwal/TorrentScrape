@@ -1,5 +1,5 @@
 from urlparse import urlparse, urlunsplit
-import bencode
+from bencode import bencode
 import binascii, urllib, socket, random, struct
 import sys
 
@@ -48,7 +48,7 @@ def scrape_tracker_udp(parsed_tracker, info_hash):
      #Scrape 
      request, xaction_id = udp_create_scrape_request(connection_id, info_hash)
      _socket.sendto(request, conn)
-     buf = _socket.recvfrom(2048)[8]
+     buf = _socket.recvfrom(2048)[0]
      return udp_parse_scrape_response(buf, xaction_id, info_hash)
 
 
@@ -60,6 +60,7 @@ def scrape_tracker_http(parsed_tracker, info_hash):
     
     url_param = binascii.a2b_hex(info_hash)
     qs.append(("info_hash", url_param))
+    qs.append(("numwant", "50"));
 
     print "url_param", url_param
     
@@ -73,7 +74,7 @@ def scrape_tracker_http(parsed_tracker, info_hash):
 
    
     decoded = bencode.bdecode(handle.read())
-    print "decoded tracker response", decoded
+    print "decoded handle=", decoded
     
     result = {}
     for h, stats in decoded['files'].iteritems():
@@ -123,9 +124,7 @@ def udp_create_scrape_request(connection_id, info_hash):
     buf += struct.pack("!i", xaction_id) # 4 bytes of transaction id
 
     hex_rep = binascii.a2b_hex(info_hash)
-    print "hex_repr", hex_rep
-   
-    buf += struct.pack("!20", hex_rep)
+    buf += struct.pack("!20s", hex_rep)
     return (buf, xaction_id)
 
 
@@ -143,15 +142,19 @@ def udp_parse_scrape_response( buf, sent_xaction_id, info_hash):
     if action == 0x2:
         result = {}
         offset = 8 # next 4 bytes is xaction id, so we need to start at 8
-        
+                                
         seeds = struct.unpack_from("!i", buf, offset)[0]
+                
         offset += 4
         complete = struct.unpack_from("!i", buf, offset)[0]
+        
         offset += 4
         leeches = struct.unpack_from("!i", buf, offset)[0]
-	offset += 4
-
+	
+         
+        offset += 4
         result = {"seeds" : seeds, "leeches": leeches, "complete": complete}
+        
         return result
 
     elif action == 0x3: #error case 

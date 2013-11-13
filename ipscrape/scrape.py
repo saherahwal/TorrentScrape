@@ -21,12 +21,19 @@ def scrape_torrent_file(torrent_file_name):
     print "announce", announce
      
     ##announce list - trackers
-    #announce_list = get_announceList(meta_info)
-    #print "announce-list", announce_list
+    announce_list = get_announceList(meta_info)
+    print "announce-list", announce_list
 
-    ## scrape result
+    ##scrape announce and announce-list (bencoded)
+    result_list = []
+    if(announce_list):
+        for _announce in announce_list:
+            result_list.append( scrape_tracker(_announce, info_hash))
+    
+    
     scrape_result = scrape_tracker( announce, info_hash)
-
+    print scrape_result    
+    return scrape_result
 
  
 if __name__ == "__main__":

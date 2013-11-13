@@ -1,6 +1,6 @@
 ## This module is written to parse bencoded torrent files ####
 import hashlib
-import bencode
+from bencode import bencode
 import sys
 
 
@@ -22,6 +22,7 @@ def get_announce(meta_info):
 
 
 def get_announceList(meta_info):
-    return meta_info['announce-list']
-
+    if meta_info.has_key('announce_list'):
+        return meta_info['announce-list']
+    return None
 
