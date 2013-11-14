@@ -19,7 +19,9 @@ def scrape_tracker( tracker_url, info_hash):
     elif url_parse.scheme == "https" or url_parse.scheme == "http":
         if "announce" not in tracker:
             raise RuntimeError("%s doesn't support scrape" % tracker)
-        url_parse = urlparse(tracker.replace("announce", "scrape"))
+        #url_parse = urlparse(tracker.replace("announce", "scrape"))
+        tracker.replace(tracker[tracker.rindex("/")+1:], "scrape")
+        url_parse = urlparse(tracker)
 	return scrape_tracker_http(url_parse, info_hash)
     else:
         raise RuntimeError("Unknown tracker scheme: %s" % url_parse.scheme)
@@ -61,31 +63,37 @@ def scrape_tracker_http(parsed_tracker, info_hash):
     url_param = binascii.a2b_hex(info_hash)
     qs.append(("info_hash", url_param))
     qs.append(("numwant", "50"));
+    qs.append(("compact", True));
 
     print "url_param", url_param
     
     qs = urllib.urlencode(qs)    
     url = urlunsplit((parsed_tracker.scheme, parsed_tracker.netloc, parsed_tracker.path, qs, parsed_tracker.fragment))
     print "url", url
-    handle = urllib.urlopen(url)
-
-    if handle.getcode() is not 200:
-        raise RuntimeError("%s status code returned. handle error" % handle.getcode())
-
-   
-    decoded = bencode.bdecode(handle.read())
-    print "decoded handle=", decoded
     
-    result = {}
-    for h, stats in decoded['files'].iteritems():
-        d_hash = binascii.b2a_hex(h)
-        s = stats["downloaded"]
-        p = stats["incomplete"]
-        c = stats["complete"]
-        result[h] =  {"seeds" :s, "peers": p, "complete": c}
+    try:
+        handle = urllib.urlopen(url)
 
-    return result
+        if handle.getcode() is not 200:
+            raise RuntimeError("%s status code returned. handle error" % handle.getcode())
 
+        _read = handle.read()   
+        print "_read result=", _read
+        decoded = bencode.bdecode(_read)
+        print "decoded handle=", decoded
+    
+
+        result = {}
+        for h, stats in decoded['files'].iteritems():
+            d_hash = binascii.b2a_hex(h)
+            s = stats["downloaded"]
+            p = stats["incomplete"]
+            c = stats["complete"]
+            result[h] =  {"seeds" :s, "peers": p, "complete": c}
+
+        return result
+    except IOError as e:
+        print "I/O error({0}): {1}".format(e.errno, e.strerror)
 
 
 def udp_create_connection_request():
@@ -138,7 +146,7 @@ def udp_parse_scrape_response( buf, sent_xaction_id, info_hash):
     if res_xaction_id != sent_xaction_id:
         raise RuntimeError("Xaction ID does not match response from scrape!! expected %s but received %s"
                         % (sent_xaction_id, res_xaction_id))
-    
+   
     if action == 0x2:
         result = {}
         offset = 8 # next 4 bytes is xaction id, so we need to start at 8
@@ -151,6 +159,7 @@ def udp_parse_scrape_response( buf, sent_xaction_id, info_hash):
         offset += 4
         leeches = struct.unpack_from("!i", buf, offset)[0]
 	
+        print "buffer size =", len(buf)       
          
         offset += 4
         result = {"seeds" : seeds, "leeches": leeches, "complete": complete}

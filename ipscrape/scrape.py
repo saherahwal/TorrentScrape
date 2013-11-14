@@ -11,6 +11,9 @@ def scrape_torrent_file(torrent_file_name):
         meta_info = get_metaInfo(f)
     
     
+    ## print meta_info
+    print "meta info", meta_info
+
     ## get info hash
     info_hash = get_infoHash(meta_info)
     print "info_hash", info_hash    
@@ -23,16 +26,18 @@ def scrape_torrent_file(torrent_file_name):
     ##announce list - trackers
     announce_list = get_announceList(meta_info)
     print "announce-list", announce_list
-
-    ##scrape announce and announce-list (bencoded)
-    result_list = []
-    if(announce_list):
-        for _announce in announce_list:
-            result_list.append( scrape_tracker(_announce, info_hash))
     
+    ##scrape announce and announce-list (bencoded)
+   # result_list = []
+   # if(announce_list):
+   #     for _aList in announce_list:
+   #         for _announce in _aList:
+   #             result_list.append( scrape_tracker(_announce, info_hash))
+    
+   # print result_list    
     
     scrape_result = scrape_tracker( announce, info_hash)
-    print scrape_result    
+    print scrape_result
     return scrape_result
 
  

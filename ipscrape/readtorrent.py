@@ -22,7 +22,7 @@ def get_announce(meta_info):
 
 
 def get_announceList(meta_info):
-    if meta_info.has_key('announce_list'):
+    if meta_info.has_key('announce-list'):
         return meta_info['announce-list']
     return None
 
