@@ -19,9 +19,9 @@ def scrape_tracker( tracker_url, info_hash):
     elif url_parse.scheme == "https" or url_parse.scheme == "http":
         if "announce" not in tracker:
             raise RuntimeError("%s doesn't support scrape" % tracker)
-        #url_parse = urlparse(tracker.replace("announce", "scrape"))
-        tracker.replace(tracker[tracker.rindex("/")+1:], "scrape")
-        url_parse = urlparse(tracker)
+        url_parse = urlparse(tracker.replace("announce", "scrape"))
+        #tracker.replace(tracker[tracker.rindex("/")+1:], "scrape")
+        #url_parse = urlparse(tracker)
 	return scrape_tracker_http(url_parse, info_hash)
     else:
         raise RuntimeError("Unknown tracker scheme: %s" % url_parse.scheme)
@@ -62,8 +62,8 @@ def scrape_tracker_http(parsed_tracker, info_hash):
     
     url_param = binascii.a2b_hex(info_hash)
     qs.append(("info_hash", url_param))
-    qs.append(("numwant", "50"));
-    qs.append(("compact", True));
+    ##qs.append(("numwant", "50"));
+    ##qs.append(("compact", True));
 
     print "url_param", url_param
     
@@ -121,6 +121,19 @@ def udp_parse_connection_response(buf, sent_xaction_id):
     elif action == 0x3:
         err = struct.unpack_from("!s", buf, 8)
         raise RuntimeError("Error trying to get connection response: %s " % err) 
+
+
+
+def udp_create_announce_request():
+    action = 0x1 ## announce action is 1
+    xaction_id = udp_get_transaction_id() ##random xaction id
+    buf = struct.pack("!q", connection_id) #first 8 bytes is connection id
+    buf += struct.pack("!i", action) # next 4 bytes is action
+    buf += struct.pack("!i", xaction_id) # next 4 bytes is xaction id
+    
+    ##TODO finish this function abo el soos
+
+
 
 
 
