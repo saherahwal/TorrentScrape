@@ -42,8 +42,8 @@ class TorrentPipeline(object):
         	self.f.write(s[:-1] + "\n")
 		self.f.flush()
         #f.close()
-#        path = item['torrent'][0]
-#        subprocess.call(['./curl_torrent.sh', path])
+        path = item['torrent']
+        subprocess.call(['./curl_torrent.sh', path])
 
 
     def exists(self, title):
