@@ -1,6 +1,6 @@
 ## This module is written to parse bencoded torrent files ####
 import hashlib
-from bencode import bencode
+import bencode
 import sys
 
 
