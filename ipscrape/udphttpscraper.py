@@ -48,11 +48,20 @@ def scrape_tracker_udp(parsed_tracker, info_hash):
      buf = _socket.recvfrom(2048)[0]
      connection_id = udp_parse_connection_response(buf, xaction_id)
 
-     #Scrape 
-     request, xaction_id = udp_create_scrape_request(connection_id, info_hash)
+     ##Announce
+     request, xaction_id = udp_create_announce_request(connection_id, info_hash)
      _socket.sendto(request, conn)
      buf = _socket.recvfrom(2048)[0]
-     return udp_parse_scrape_response(buf, xaction_id, info_hash)
+     return udp_parse_announce_response(buf, xaction_id, info_hash)
+     
+
+
+     #Scrape 
+     
+     #request, xaction_id = udp_create_scrape_request(connection_id, info_hash)
+     #_socket.sendto(request, conn)
+     #buf = _socket.recvfrom(2048)[0]
+     #return udp_parse_scrape_response(buf, xaction_id, info_hash)
 
 
 
@@ -123,7 +132,7 @@ def udp_parse_connection_response(buf, sent_xaction_id):
 
 
 
-def udp_create_announce_request():
+def udp_create_announce_request(connection_id, info_hash):
     action = 0x1 ## announce action is 1
     xaction_id = udp_get_transaction_id() ##random xaction id
     buf = struct.pack("!q", connection_id) #first 8 bytes is connection id
@@ -131,10 +140,73 @@ def udp_create_announce_request():
     buf += struct.pack("!i", xaction_id) # next 4 bytes is xaction id
     
     ##TODO finish this function abo el soos
+    hex_rep = binascii.a2b_hex(info_hash)
+    buf += struct.pack("!20s", hex_rep) #info hash
+
+    peer_id = get_random_byte_string(20)
+   # print "peer id generated = ", peer_id
+    buf += struct.pack("!20s", peer_id)
+
+    downloaded = 0L
+    buf += struct.pack("!q", downloaded)
+
+    left = 0L
+    buf += struct.pack("!q", left);  
+          
+    uploaded = 0L
+    buf += struct.pack("!q", uploaded);  
+    
+    event = 1  # 1: start event, might need to change to None upon next request
+    buf += struct.pack("!i", event)
+   
+    ip = 0
+    buf += struct.pack("!i", ip)
+
+    key = get_random_int() ## random key
+   # print "random key = ", key
+    buf += struct.pack("!i", key)
+
+    num_want = 1 ## for test purposes just get one IP
+    buf += struct.pack("!i", num_want)
+
+    port = 6882
+    buf += struct.pack("!h", port)
+
+    return (buf, xaction_id)
 
 
 
+def udp_parse_announce_response(buf, sent_xaction_id, info_hash):
+    if len(buf) < 16:
+        raise RuntimeError("Wrong response length while scraping %s" % len(buf))
+    
+    action = struct.unpack_from("!i", buf)[0] ## get action (first 4 bytes)
+    res_xaction_id = struct.unpack_from("!i", buf, 4)[0] ## get transaction id
+    
+    
+    if res_xaction_id != sent_xaction_id:
+        raise RuntimeError("Xaction ID does not match response from scrape!! expected %s but received %s"
+                        % (sent_xaction_id, res_xaction_id))
 
+    if action == 0x1:
+        interval = struct.unpack_from( "!i", buf, 8)[0] ## interval : num of seconds to wait before reannouncing yourself
+        leechers = struct.unpack_from("!i", buf, 12)[0] ## leechers: number of peers in sward that didn't finish downloading
+        seeders = struct.unpack_from("!i", buf, 16)[0] ## seeders: number of peers that have finished downloading and are seeding
+        print "interval", interval
+        ##TODO fix this to get all peer ips : for test purpose just get one IP 
+        ip = struct.unpack_from("!i", buf, 20)[0] ## get ip of peer
+        port = struct.unpack_from("!h", buf, 24)[0] ## get port they listen at 
+
+        print "ip", ip
+       
+
+    elif action == 0x3:
+        #error occurred , get the error string from byte 8
+        err = struct.unpack_from("!s", buf, 8)
+        raise RuntimeError("Error while scraping tracker: %s" %err)
+
+    else:
+        raise RuntimeError("Unexpected action num " + action + " action should be 1 for announce action") 
 
 def udp_create_scrape_request(connection_id, info_hash):
     action = 0x2 #action 2 is scrape
@@ -188,6 +260,13 @@ def udp_get_transaction_id():
     return int(random.randrange(0,255))
 
 
+def get_random_int():
+    return int(random.randrange(-(2**31), 2**31-1))
+
+def get_random_byte_string(numBytes):
+    """ get random byte string of numBytes bytes"""
+    st = ''.join(chr(random.randint(0,255)) for i in range(numBytes))    
+    return st
 
 
 if __name__ == "__main__":
