@@ -139,7 +139,7 @@ def udp_create_announce_request(connection_id, info_hash):
     buf += struct.pack("!i", action) # next 4 bytes is action
     buf += struct.pack("!i", xaction_id) # next 4 bytes is xaction id
     
-    ##TODO finish this function abo el soos
+    
     hex_rep = binascii.a2b_hex(info_hash)
     buf += struct.pack("!20s", hex_rep) #info hash
 
@@ -197,7 +197,9 @@ def udp_parse_announce_response(buf, sent_xaction_id, info_hash):
         ip = struct.unpack_from("!i", buf, 20)[0] ## get ip of peer
         port = struct.unpack_from("!h", buf, 24)[0] ## get port they listen at 
 
-        print "ip", ip
+        print "ip=", ip 
+        print "IPv4=", to_string(ip)
+        
        
 
     elif action == 0x3:
@@ -256,9 +258,11 @@ def udp_parse_scrape_response( buf, sent_xaction_id, info_hash):
         raise RuntimError("Error while scraping tracker: %s" %err)
 
 
+
+### definition of utility functions. Consider moving these to different python module
+
 def udp_get_transaction_id():
     return int(random.randrange(0,255))
-
 
 def get_random_int():
     return int(random.randrange(-(2**31), 2**31-1))
@@ -267,6 +271,11 @@ def get_random_byte_string(numBytes):
     """ get random byte string of numBytes bytes"""
     st = ''.join(chr(random.randint(0,255)) for i in range(numBytes))    
     return st
+
+def to_string(ip):
+    """ Convert 32-bit integer ip to dotted IPv4 address."""
+    return ".".join(map(lambda n : str(ip >> n & 0xFF), [24, 16, 8, 0]))
+
 
 
 if __name__ == "__main__":
