@@ -1,31 +1,41 @@
 from urlparse import urlparse, urlunsplit
-import bencode
+from bencode import bencode
 import binascii, urllib, socket, random, struct
 import sys
 
 
-def scrape_tracker( tracker_url, info_hash):
+def scrape_tracker( tracker_urls, info_hash):
     """ 
         tracker_url: string of the announce url of the tracker
         info_hash: info hash to query the tracker for (this is related to specific file)
 
         This function return a dictionary of the response from the tracker for that hash_info
     """
-    tracker = tracker_url.lower() #lower case
-    url_parse = urlparse(tracker)
+    for t in tracker_urls:
+        try:
+            tracker = t.lower() #lower case
+            url_parse = urlparse(tracker)
      
-    if url_parse.scheme == "udp": #check scheme of tracker - protocol
-        return scrape_tracker_udp(url_parse, info_hash)
-    elif url_parse.scheme == "https" or url_parse.scheme == "http":
-        if "announce" not in tracker:
-            raise RuntimeError("%s doesn't support scrape" % tracker)
+            if url_parse.scheme == "udp": #check scheme of tracker - protocol
+                return scrape_tracker_udp(url_parse, info_hash)
+            elif url_parse.scheme == "https" or url_parse.scheme == "http":
+                if "announce" not in tracker:
+                    raise RuntimeError("%s doesn't support scrape" % tracker)
        
-        url_parse = urlparse(tracker.replace("announce", "scrape"))
-        #tracker.replace(tracker[tracker.rindex("/")+1:], "scrape")
-        #url_parse = urlparse(tracker)
-	return scrape_tracker_http(url_parse, info_hash)
-    else:
-        raise RuntimeError("Unknown tracker scheme: %s" % url_parse.scheme)
+            #url_parse = urlparse(tracker.replace("announce", "scrape"))
+            #tracker.replace(tracker[tracker.rindex("/")+1:], "scrape")
+            #url_parse = urlparse(tracker)
+	        return http_announce(url_parse, info_hash)
+            else:
+                raise RuntimeError("Unknown tracker scheme: %s" % url_parse.scheme)
+
+        except IOError as e:
+            print "I/O error({0}): {1}".format(e.errno, e.strerror)
+            continue
+        except:
+             print "Error:", sys.exc_info()[0]
+             
+
 
 
 
@@ -45,15 +55,16 @@ def scrape_tracker_udp(parsed_tracker, info_hash):
      #Get connection id
      request, xaction_id = udp_create_connection_request()
      _socket.sendto(request, conn)
-     buf = _socket.recvfrom(2048)[0]
+     buf = _socket.recvfrom(4096)[0]
      connection_id = udp_parse_connection_response(buf, xaction_id)
 
      ##Announce
-     request, xaction_id = udp_create_announce_request(connection_id, info_hash)
+     num_peers = 200
+     request, xaction_id = udp_create_announce_request(connection_id, info_hash, num_peers)
      _socket.sendto(request, conn)
-     buf = _socket.recvfrom(2048)[0]
-     return udp_parse_announce_response(buf, xaction_id, info_hash)
-     
+     buf = _socket.recvfrom(4096)[0]
+     return udp_parse_announce_response(buf, xaction_id, info_hash, num_peers)
+    
 
 
      #Scrape 
@@ -65,7 +76,7 @@ def scrape_tracker_udp(parsed_tracker, info_hash):
 
 
 
-def scrape_tracker_http(parsed_tracker, info_hash):
+def http_scrape(parsed_tracker, info_hash):
     print "Scraping HTTP: %s for hash %s" % (parsed_tracker.geturl(), info_hash)
    
     qs = [] #querystring
@@ -104,6 +115,65 @@ def scrape_tracker_http(parsed_tracker, info_hash):
         print "I/O error({0}): {1}".format(e.errno, e.strerror)
 
 
+def http_announce(parsed_tracker, info_hash):
+    print "Scraping HTTP: %s for hash %s" % (parsed_tracker.geturl(), info_hash)
+   
+    qs = [] #querystring
+    
+    ## query string params
+    peer_id = get_random_byte_string(20)       
+    downloaded = 0
+    left = 0
+    uploaded = 0
+    event = 1 # 1 for start
+    ip = 0 # defualt to use client IP
+    numwant = 1 ## we want 200 IP addresses
+     
+     
+    
+    url_param = binascii.a2b_hex(info_hash)
+    qs.append(("info_hash", url_param))
+    qs.append(("peer_id", peer_id))
+    qs.append(("left", left))
+    qs.append(("uploaded", uploaded))
+    qs.append(("event", event))
+    qs.append(("ip", ip))
+    qs.append(("numwant", numwant))
+
+    print "url_param", url_param
+   
+    qs = urllib.urlencode(qs)    
+    url = urlunsplit((parsed_tracker.scheme, parsed_tracker.netloc, parsed_tracker.path, qs, parsed_tracker.fragment))
+    print "url", url
+    
+    
+    handle = urllib.urlopen(url)
+
+    if handle.getcode() is not 200:
+        raise RuntimeError("%s status code returned. handle error" % handle.getcode())
+
+    _read = handle.read()   
+    print "_read result=", _read
+    decoded = bencode.bdecode(_read)
+    print "decoded handle=", decoded
+    
+
+    result = {}
+    for h, stats in decoded.iteritems():
+        d_hash = binascii.b2a_hex(h)
+        leechers = stats["incomplete"]
+        seeders = stats["complete"]
+        interval = stats["interval"]
+        mininterval = stats["min interval"]
+        peers = stats["peers"]
+        result[h] =  {"seeders" :seeders, "leechers": leechers, "interval": interval, "min interval": mininterval, "peers": peers}
+
+    return result
+    
+    
+
+
+
 def udp_create_connection_request():
      connection_id = 0x41727101980 #default conn id
      action = 0x0 #( 0 means give me a new conn id)
@@ -132,7 +202,11 @@ def udp_parse_connection_response(buf, sent_xaction_id):
 
 
 
-def udp_create_announce_request(connection_id, info_hash):
+def udp_create_announce_request(connection_id, info_hash, num_peers):
+    """ connection_id: from connection req/resp
+    info_hash: from bencoded torrent file
+    num_peers: number of peers/IPs to send to client"""
+
     action = 0x1 ## announce action is 1
     xaction_id = udp_get_transaction_id() ##random xaction id
     buf = struct.pack("!q", connection_id) #first 8 bytes is connection id
@@ -166,17 +240,18 @@ def udp_create_announce_request(connection_id, info_hash):
    # print "random key = ", key
     buf += struct.pack("!i", key)
 
-    num_want = 1 ## for test purposes just get one IP
+    num_want = num_peers ## for test purposes just get one IP
     buf += struct.pack("!i", num_want)
 
     port = 6882
-    buf += struct.pack("!h", port)
+    buf += struct.pack("!H", port)
 
     return (buf, xaction_id)
 
 
 
-def udp_parse_announce_response(buf, sent_xaction_id, info_hash):
+def udp_parse_announce_response(buf, sent_xaction_id, info_hash, num_peers):
+    print "buf size=", len(buf)
     if len(buf) < 16:
         raise RuntimeError("Wrong response length while scraping %s" % len(buf))
     
@@ -189,17 +264,26 @@ def udp_parse_announce_response(buf, sent_xaction_id, info_hash):
                         % (sent_xaction_id, res_xaction_id))
 
     if action == 0x1:
-        interval = struct.unpack_from( "!i", buf, 8)[0] ## interval : num of seconds to wait before reannouncing yourself
-        leechers = struct.unpack_from("!i", buf, 12)[0] ## leechers: number of peers in sward that didn't finish downloading
-        seeders = struct.unpack_from("!i", buf, 16)[0] ## seeders: number of peers that have finished downloading and are seeding
-        print "interval", interval
-        ##TODO fix this to get all peer ips : for test purpose just get one IP 
-        ip = struct.unpack_from("!i", buf, 20)[0] ## get ip of peer
-        port = struct.unpack_from("!h", buf, 24)[0] ## get port they listen at 
 
-        print "ip=", ip 
-        print "IPv4=", to_string(ip)
+        try:
+            result = {} # result map
+            interval = struct.unpack_from( "!i", buf, 8)[0] ## interval : num of seconds to wait before reannouncing yourself
+            leechers = struct.unpack_from("!i", buf, 12)[0] ## leechers: number of peers in sward that didn't finish downloading
+            seeders = struct.unpack_from("!i", buf, 16)[0] ## seeders: number of peers that have finished downloading and are seeding
+            peer_IPs = [] ## store list of (IP, TCP port) pairs per peer/client 
         
+            result = { "interval": interval, "leechers": leechers, "seeders": seeders, "peers": peer_IPs}
+        
+            offset = 20 #start reading IPv4 addresses at this offset
+            for i in xrange(num_peers):
+                ip = struct.unpack_from("!i", buf, offset)[0] ## get ip of peer
+                port = struct.unpack_from("!H", buf, offset+4)[0] ## get port they listen at 
+                offset += 6
+                result["peers"].append( (to_string(ip), port) )
+        except:
+            pass      
+        print "num of ips is = ", len(result['peers'])
+        return result
        
 
     elif action == 0x3:

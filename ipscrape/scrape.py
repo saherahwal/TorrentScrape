@@ -28,15 +28,16 @@ def scrape_torrent_file(torrent_file_name):
     print "announce-list", announce_list
     
     ##scrape announce and announce-list (bencoded)
-   # result_list = []
-   # if(announce_list):
-   #     for _aList in announce_list:
-   #         for _announce in _aList:
-   #             result_list.append( scrape_tracker(_announce, info_hash))
+    try_announce_list = [announce]
+    if(announce_list):
+        for _aList in announce_list:
+            for _announce in _aList:
+                 try_announce_list.append(_announce)     
+    #            result_list.append( scrape_tracker(_announce, info_hash))
     
-   # print result_list    
+    #print result_list    
     
-    scrape_result = scrape_tracker( announce, info_hash)
+    scrape_result = scrape_tracker( try_announce_list, info_hash)
     print scrape_result
     return scrape_result
 
