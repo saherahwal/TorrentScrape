@@ -31,7 +31,6 @@ def main(argv=None):
 		cur = con.cursor()
 	      	cur.execute("START TRANSACTION;")
 		cur.execute("BEGIN;")
-		cur.execute("COMMIT;")
 	        for line in lines:
 			try:
 				line = [word.replace("'", "*") for word in line.split(",")]
