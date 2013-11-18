@@ -16,18 +16,22 @@ def main(argv=None):
         argv = sys.argv
   
     con = None
+    cur = None
 
     files = getFiles()
   
     try:
         con = mdb.connect(host='localhost', user='neo', passwd='1234', db='6885')
 
-	for file in files:
-		f = open(DIR_PATH + "/" + file, "r")
+	for filename in files:
+		f = open(DIR_PATH + "/" + filename, "r")
+		print filename
 		lines = f.readlines()	
 		f.close()	
-
 		cur = con.cursor()
+	      	cur.execute("START TRANSACTION;")
+		cur.execute("BEGIN;")
+		cur.execute("COMMIT;")
 	        for line in lines:
 			try:
 				line = [word.replace("'", "*") for word in line.split(",")]
@@ -41,27 +45,29 @@ def main(argv=None):
 				torrent = line[7]
 				leech = line[8]
 				size = line[9]				
-				dt = file[:file.rindex(".")].split("-")
+				dt = filename[:filename.rindex(".")].split("-")
 				t_date = dt[3] + "-" + dt[1] + "-" + dt[2]
 				t_time = dt[4]
 		                query = "INSERT INTO torrents " + \
 					" (t_website, t_category, t_title, t_url, t_age, t_seed, t_sizeType, t_torrent, t_leech, t_size, t_date, t_time) " + \
 					"  VALUES('"  + website + "','" + category + "', '" + title + "', '" + url + "', '" + age + "', '" + seed + "', '" + sizeType + "', '" + torrent + "', '" + leech + "','" + size + "', date('" + t_date  + "'), time('" + t_time + "'));"
 				try:
-	        	        	cur.execute("START TRANSACTION;")
-					cur.execute("BEGIN;")
             				cur.execute(query)
-	            			cur.execute("COMMIT;")
 					#pass
 			        except Exception, e:
         	        		print e
-        	        		cur.execute("ABORT;")
-		        	        # pass
+        	        		#cur.execute("ABORT;")
+		        	        pass
 			except Exception, e:
-				print e
+				print filename, line, e
 				continue
-		shutil.move(DIR_PATH + "/" + file, DIR_PATH + "/done/" + file)
+		cur.execute("COMMIT;")
+		os.rename(DIR_PATH + "/" + filename, DIR_PATH + "/done/" + filename)
     except mdb.Error, e:
+	try:
+		cur.execute("ABORT;")
+	except:
+		pass
         
         print "Error %d: %s" % (e.args[0], e.args[1])
         sys.exit(1)
@@ -73,6 +79,7 @@ def main(argv=None):
 
 def getFiles():
 	files = os.listdir(DIR_PATH)	
+	files = [filename for filename in files if os.path.isfile(DIR_PATH + "/" + filename)]
 #	return [DIR_PATH + "/" + file for file in files]
 	return files
   
