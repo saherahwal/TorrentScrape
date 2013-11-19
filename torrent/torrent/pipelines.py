@@ -45,25 +45,25 @@ class TorrentPipeline(object):
         
         path = item['torrent']
         #subprocess.call(['./curl_torrent.sh', path])
-        buf = cStringIO.StringIO()
-        c = pycurl.Curl()
-        path = str(path)
-        agent="'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070802 SeaMonkey/1.1.4)'"
-        print "type of c.URL", type(c.URL)
-        print "type of path", type(path)
-        print "agent", agent
-
-        c.setopt(c.URL, path)
-        c.setopt(c.FOLLOWLOCATION, 1)
-        #c.setopt(c.TRANSFER_ENCODING, 1)
-        c.setopt(c.USERAGENT, agent)
-        c.setopt(c.WRITEFUNCTION, buf.write)
         
-        c.perform()
+        ## buffer read
+        #buf = cStringIO.StringIO()
+        #c = pycurl.Curl()
+        #path = str(path)
+        #agent="'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070802 SeaMonkey/1.1.4)'"
+        #print "type of c.URL", type(c.URL)
+        #print "type of path", type(path)
+        #print "agent", agent
+        #c.setopt(c.URL, path)
+        #c.setopt(c.FOLLOWLOCATION, 1)
+        #c.setopt(c.TRANSFER_ENCODING, 1)
+        #c.setopt(c.USERAGENT, agent)
+        #c.setopt(c.WRITEFUNCTION, buf.write)
+        #c.perform()
         #b = bencode.bdecode(buf.getvalue())
         #print "decoded bencode=", decoded
-        print str(buf.getvalue())
-        buf.close()
+        #print str(buf.getvalue())
+        #buf.close()
 
     def exists(self, title):
 	pass
