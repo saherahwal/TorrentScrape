@@ -1,5 +1,5 @@
 from urlparse import urlparse, urlunsplit
-from bencode import bencode
+import bencode
 import binascii, urllib, socket, random, struct
 import sys
 
@@ -11,13 +11,14 @@ def scrape_tracker( tracker_urls, info_hash):
 
         This function return a dictionary of the response from the tracker for that hash_info
     """
+    result_IPs = set([])
     for t in tracker_urls:
         try:
             tracker = t.lower() #lower case
             url_parse = urlparse(tracker)
      
             if url_parse.scheme == "udp": #check scheme of tracker - protocol
-                return scrape_tracker_udp(url_parse, info_hash)
+                result_IPs = set(result_IPs.union(set(scrape_tracker_udp(url_parse, info_hash))))
             elif url_parse.scheme == "https" or url_parse.scheme == "http":
                 if "announce" not in tracker:
                     raise RuntimeError("%s doesn't support scrape" % tracker)
@@ -32,9 +33,10 @@ def scrape_tracker( tracker_urls, info_hash):
         except IOError as e:
             print "I/O error({0}): {1}".format(e.errno, e.strerror)
             continue
-        except:
-             print "Error:", sys.exc_info()[0]
-             
+        #except:
+            # print "Error:", sys.exc_info()[0]
+    print "length of set=", len(result_IPs) 
+    return result_IPs             
 
 
 
@@ -167,7 +169,7 @@ def http_announce(parsed_tracker, info_hash):
         mininterval = stats["min interval"]
         peers = stats["peers"]
         result[h] =  {"seeders" :seeders, "leechers": leechers, "interval": interval, "min interval": mininterval, "peers": peers}
-
+    print result
     return result
     
     
@@ -267,6 +269,7 @@ def udp_parse_announce_response(buf, sent_xaction_id, info_hash, num_peers):
 
         try:
             result = {} # result map
+            ips = []
             interval = struct.unpack_from( "!i", buf, 8)[0] ## interval : num of seconds to wait before reannouncing yourself
             leechers = struct.unpack_from("!i", buf, 12)[0] ## leechers: number of peers in sward that didn't finish downloading
             seeders = struct.unpack_from("!i", buf, 16)[0] ## seeders: number of peers that have finished downloading and are seeding
@@ -276,15 +279,17 @@ def udp_parse_announce_response(buf, sent_xaction_id, info_hash, num_peers):
         
             offset = 20 #start reading IPv4 addresses at this offset
             for i in xrange(num_peers):
-                ip = struct.unpack_from("!i", buf, offset)[0] ## get ip of peer
+                ip = struct.unpack_from("!I", buf, offset)[0] ## get ip of peer
                 port = struct.unpack_from("!H", buf, offset+4)[0] ## get port they listen at 
                 offset += 6
-                result["peers"].append( (to_string(ip), port) )
+                result["peers"].append( (to_string(ip), ip, port) )
+                       
         except:
             pass      
         print "num of ips is = ", len(result['peers'])
-        return result
-       
+        ips = result["peers"]
+        #return result
+        return ips
 
     elif action == 0x3:
         #error occurred , get the error string from byte 8
