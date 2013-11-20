@@ -7,7 +7,9 @@ import subprocess
 import time
 import urllib2
 import os
-
+import pycurl
+import cStringIO
+from bencode import bencode
 
 class TorrentPipeline(object):
     
@@ -38,13 +40,34 @@ class TorrentPipeline(object):
 			if isinstance(item[i], list):
 				item[i] = item[i][0]
 			s += item[i].replace(",", "*") + ","
-	#f = open('torrents/torrents.log','a')
-        	self.f.write(s[:-1] + "\n")
+	      	self.f.write(s[:-1] + "\n")
 		self.f.flush()
-        #f.close()
+        
         path = item['torrent']
+
         print "path = ", path
         subprocess.call(['./curl_torrent.sh', path])
+
+        #subprocess.call(['./curl_torrent.sh', path])
+        
+        ## buffer read
+        #buf = cStringIO.StringIO()
+        #c = pycurl.Curl()
+        #path = str(path)
+        #agent="'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070802 SeaMonkey/1.1.4)'"
+        #print "type of c.URL", type(c.URL)
+        #print "type of path", type(path)
+        #print "agent", agent
+        #c.setopt(c.URL, path)
+        #c.setopt(c.FOLLOWLOCATION, 1)
+        #c.setopt(c.TRANSFER_ENCODING, 1)
+        #c.setopt(c.USERAGENT, agent)
+        #c.setopt(c.WRITEFUNCTION, buf.write)
+        #c.perform()
+        #b = bencode.bdecode(buf.getvalue())
+        #print "decoded bencode=", decoded
+        #print str(buf.getvalue())
+        #buf.close()
 
 
     def exists(self, title):
