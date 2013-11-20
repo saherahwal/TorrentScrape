@@ -12,11 +12,11 @@ def scrape_torrent_file(torrent_file_name):
     
     
     ## print meta_info
-    print "meta info", meta_info
+    #print "meta info", meta_info
 
     ## get info hash
     info_hash = get_infoHash(meta_info)
-    print "info_hash", info_hash    
+    #print "info_hash", info_hash    
 
 
     ## announce - tracker url

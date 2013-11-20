@@ -1,8 +1,18 @@
 ## This module is written to parse bencoded torrent files ####
 import hashlib
-from bencode import bencode
+import bencode
 import sys
+import subprocess
 
+
+
+def get_decoded_indexer_response(url):
+    """ return curl output download of torrent file """
+    agent="'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070802 SeaMonkey/1.1.4)'"
+    proc = subprocess.Popen([
+"curl", "--globoff", "--compressed", "-A", agent, "-L", "--post302", url], stdout= subprocess.PIPE)
+    out, err = proc.communicate()
+    return out
 
 def get_metaInfo(torrent_file):
     """ get the meta info of the torrent file, decodes the bencoding of .torrent"""
