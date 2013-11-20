@@ -43,6 +43,7 @@ class TorrentPipeline(object):
 		self.f.flush()
         #f.close()
         path = item['torrent']
+        print "path = ", path
         subprocess.call(['./curl_torrent.sh', path])
 
 
