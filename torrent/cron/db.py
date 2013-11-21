@@ -9,6 +9,14 @@ import shutil
 import re
 
 DIR_PATH = '/home/neo/TorrentScrape/torrent/torrents'
+
+def getTorrentId(cur, title, url, website):
+    query = "SELECT id FROM torrent where t_title = %s AND t_website = %s AND t_url = %s;" % (title, website, url)
+    cur.execute(query)
+    t_id = cur.fetchone()
+    if t_id == None:
+	return None
+    return int(t_id)
   
 def main(argv=None):
       
@@ -31,6 +39,18 @@ def main(argv=None):
 		cur = con.cursor()
 	      	cur.execute("START TRANSACTION;")
 		cur.execute("BEGIN;")
+		dt = filename[:filename.rindex(".")].split("-")
+		t_date = dt[3] + "-" + dt[1] + "-" + dt[2]
+		t_time = dt[4]
+                query = "INSERT INTO datetime(t_date, t_time) VALUES(date(%s),time(%s));" % (t_date, t_time)
+		cur.execute(query)
+		cur.execute("COMMIT;")
+		query = "SELECT id from datetime where t_date = date(%s) AND t_time = time(%s)" % (t_date, t_time)
+		cur.execute(query)
+		dt_id = int(cur.fetchone())
+		
+	      	cur.execute("START TRANSACTION;")
+		cur.execute("BEGIN;")
 	        for line in lines:
 			try:
 				line = [word.replace("'", "*") for word in line.split(",")]
@@ -43,13 +63,17 @@ def main(argv=None):
 				sizeType = line[6]
 				torrent = line[7]
 				leech = line[8]
-				size = line[9]				
-				dt = filename[:filename.rindex(".")].split("-")
-				t_date = dt[3] + "-" + dt[1] + "-" + dt[2]
-				t_time = dt[4]
-		                query = "INSERT INTO torrents " + \
-					" (t_website, t_category, t_title, t_url, t_age, t_seed, t_sizeType, t_torrent, t_leech, t_size, t_date, t_time) " + \
-					"  VALUES('"  + website + "','" + category + "', '" + title + "', '" + url + "', '" + age + "', '" + seed + "', '" + sizeType + "', '" + torrent + "', '" + leech + "','" + size + "', date('" + t_date  + "'), time('" + t_time + "'));"
+				size = line[9]
+				t_id = getTorrentId(cur, title, url, website)
+				if (t_id == None):
+			                query = "INSERT INTO torrent " + \
+						" (t_website, t_category, t_title, t_url, t_sizeType, t_torrent, t_size) " + \
+						"  VALUES(%s, %s, %s, %s, %s, %s, %s); " % (website, category, title, url, sizeType, torrent, size)
+					cur.execute(query)
+					t_id = getTorrentId(cur, title, url, website)
+		                query = "INSERT INTO torrent_datetime " + \
+					" (torrent_id, datetime_id, age, leechers, seeders) " + \
+					"  VALUES(%d, %d, %s, %s, %s); " % (t_id, dt_id, age, leech, seed)
 				try:
             				cur.execute(query)
 					#pass
