@@ -40,13 +40,12 @@ class TorrentPipeline(object):
 			if isinstance(item[i], list):
 				item[i] = item[i][0]
 			s += item[i].replace(",", "*") + ","
-	      	self.f.write(s[:-1] + "\n")
+	      	self.f.write(s[:-1].encode("UTF-8") + "\n")
 		self.f.flush()
         
         path = item['torrent']
-
         print "path = ", path
-        subprocess.call(['./curl_torrent.sh', path])
+        #subprocess.call(['./curl_torrent.sh', path])
 
         #subprocess.call(['./curl_torrent.sh', path])
         

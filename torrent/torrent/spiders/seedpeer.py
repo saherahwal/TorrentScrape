@@ -35,16 +35,16 @@ class SeedpeerSpider(BaseSpider):
         for tr in tbl_rows:
             item = TorrentItem()
             item['title'] = u''.join(tr.select('td[1]/a[1]/text()').extract()[0]).encode('utf-8').strip() 
-            item['category'] = str(tr.select('td[1]/a/small/a/text()').extract()[0])
-            item['age'] = str(tr.select('td[2]/text()').extract()[0])
-            size, sizeType = str(tr.select('td[3]/text()').extract()[0]).split()
+            item['category'] = tr.select('td[1]/a/small/a/text()').extract()[0]
+            item['age'] = tr.select('td[2]/text()').extract()[0]
+            size, sizeType = tr.select('td[3]/text()').extract()[0].split()
             item['size'] = size
             item['sizeType'] = sizeType
-            item['seed'] = str(tr.select('td[4]/font/text()').extract()[0])
-            item['leech'] = str(tr.select('td[5]/font/text()').extract()[0])
+            item['seed'] = tr.select('td[4]/font/text()').extract()[0]
+            item['leech'] = tr.select('td[5]/font/text()').extract()[0]
             item['website'] = self.url_prefix+'/'
-            item['url'] = str(tr.select('td[1]/a/@href').extract()[0])
-            request = Request(self.url_prefix + str(tr.select('td[1]/a/@href').extract()[0]), callback= self.parse_torrent)
+            item['url'] = tr.select('td[1]/a/@href').extract()[0]
+            request = Request(self.url_prefix + tr.select('td[1]/a/@href').extract()[0], callback= self.parse_torrent)
             request.meta['item'] = item
             yield request
         
@@ -72,7 +72,7 @@ class SeedpeerSpider(BaseSpider):
     def parse_torrent(self, response):
         print "parsing detail"
         hxs = HtmlXPathSelector(response)
-        torrent_download = str(hxs.select('//div[@class="downloadTorrent"]/a/@href').extract()[0])
+        torrent_download = hxs.select('//div[@class="downloadTorrent"]/a/@href').extract()[0]
         item = response.meta['item']
         item['torrent'] = self.url_prefix + torrent_download
 
