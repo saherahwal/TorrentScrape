@@ -7,7 +7,7 @@ import subprocess
 import time
 import urllib2
 import os
-import pycurl
+#import pycurl
 import cStringIO
 from bencode import bencode
 
@@ -35,13 +35,26 @@ class TorrentPipeline(object):
     
     def process_item(self, item, spider):
 	s = ""
+        c = ","
 	if len(item['title']) > 0:
 		for i in item:
 			if isinstance(item[i], list):
 				item[i] = item[i][0]
 			s += item[i].replace(",", "*") + ","
-	      	self.f.write(s[:-1].encode("UTF-8") + "\n")
-		self.f.flush()
+	      	
+                item['website'] = item['website'].replace(",", "*")
+                item['category'] = item['category'].replace(",", "*")
+                item['title']= item['title'].replace(",", "*")
+                item['url'] = item['url'].replace(",", "*")
+                item['age'] = item['age'].replace(",", "*")
+                item['seed'] = item['seed'].replace(",", "*")
+                item['size'] = item['size'].replace(",", "*")
+
+
+		wLog = c.join([item['website'], item['category'], item['title'], item['url'], item['age'], item['seed'], item['sizeType'], item['torrent'] , item['leech'], item['size']])
+                #self.f.write(s[:-1].encode("UTF-8") + "\n")
+		self.f.write(wLog.encode("UTF-8") + "\n")
+                self.f.flush()
         
         path = item['torrent']
         print "path = ", path
