@@ -54,7 +54,7 @@ class KatSpider(BaseSpider):
 	page_attrs = hxs.select('//div[starts-with(@class, "pages")]').select('a')
 	final_page = page_attrs[-1].select('@href').extract()
 	self.pages_num = int(page_attrs[-1].select('span/text()').extract()[0])
-	print "pages_num=", self.pages_num
+	#print "pages_num=", self.pages_num
 
 	if (self._page < self.pages_num):
             self._page += 1
