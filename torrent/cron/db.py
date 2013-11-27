@@ -11,12 +11,12 @@ import re
 DIR_PATH = '/home/neo/TorrentScrape/torrent/torrents'
 
 def getTorrentId(cur, title, url, website):
-    query = "SELECT id FROM torrent where t_title = %s AND t_website = %s AND t_url = %s;" % (title, website, url)
+    query = "SELECT id FROM torrent where t_title = '%s' AND t_website = '%s' AND t_url = '%s';" % (title, website, url)
     cur.execute(query)
     t_id = cur.fetchone()
     if t_id == None:
 	return None
-    return int(t_id)
+    return int(t_id[0])
   
 def main(argv=None):
       
@@ -41,13 +41,13 @@ def main(argv=None):
 		cur.execute("BEGIN;")
 		dt = filename[:filename.rindex(".")].split("-")
 		t_date = dt[3] + "-" + dt[1] + "-" + dt[2]
-		t_time = dt[4]
-                query = "INSERT INTO date_time(t_date, t_time) VALUES(date(%s),time(%s));" % (t_date, t_time)
+		t_time = dt[4] + "00"
+                query = "INSERT INTO date_time(t_date, t_time) VALUES(date('%s'),time('%s'));" % (t_date, t_time)
 		cur.execute(query)
 		cur.execute("COMMIT;")
-		query = "SELECT id from date_time where t_date = date(%s) AND t_time = time(%s)" % (t_date, t_time)
+		query = "SELECT id from date_time where t_date = date('%s') AND t_time = time('%s')" % (t_date, t_time)
 		cur.execute(query)
-		dt_id = int(cur.fetchone())
+		dt_id = int(cur.fetchone()[0])
 		
 	      	cur.execute("START TRANSACTION;")
 		cur.execute("BEGIN;")
@@ -68,12 +68,12 @@ def main(argv=None):
 				if (t_id == None):
 			                query = "INSERT INTO torrent " + \
 						" (t_website, t_category, t_title, t_url, t_sizeType, t_torrent, t_size) " + \
-						"  VALUES(%s, %s, %s, %s, %s, %s, %s); " % (website, category, title, url, sizeType, torrent, size)
+						"  VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s'); " % (website, category, title, url, sizeType, torrent, size)
 					cur.execute(query)
 					t_id = getTorrentId(cur, title, url, website)
 		                query = "INSERT INTO torrent_datetime " + \
 					" (torrent_id, datetime_id, age, leechers, seeders) " + \
-					"  VALUES(%d, %d, %s, %s, %s); " % (t_id, dt_id, age, leech, seed)
+					"  VALUES(%d, %d, '%s', '%s', '%s'); " % (t_id, dt_id, age, leech, seed)
 				try:
             				cur.execute(query)
 					#pass
