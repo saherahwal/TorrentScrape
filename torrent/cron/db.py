@@ -42,10 +42,10 @@ def main(argv=None):
 		dt = filename[:filename.rindex(".")].split("-")
 		t_date = dt[3] + "-" + dt[1] + "-" + dt[2]
 		t_time = dt[4]
-                query = "INSERT INTO datetime(t_date, t_time) VALUES(date(%s),time(%s));" % (t_date, t_time)
+                query = "INSERT INTO date_time(t_date, t_time) VALUES(date(%s),time(%s));" % (t_date, t_time)
 		cur.execute(query)
 		cur.execute("COMMIT;")
-		query = "SELECT id from datetime where t_date = date(%s) AND t_time = time(%s)" % (t_date, t_time)
+		query = "SELECT id from date_time where t_date = date(%s) AND t_time = time(%s)" % (t_date, t_time)
 		cur.execute(query)
 		dt_id = int(cur.fetchone())
 		
