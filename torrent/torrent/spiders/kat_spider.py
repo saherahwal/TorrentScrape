@@ -9,7 +9,7 @@ class KatSpider(BaseSpider):
 	
     name = "kat"
     allowed_domains = [ "kat.ph", "kickass.to" ]    
-    categories = ['books', 'tv', 'music', 'games', 'applications', 'movies', 'other']
+    categories = ['music', 'books', 'tv', 'games', 'applications', 'movies', 'other']
  
 
     url_prefix = 'http://kat.ph'
@@ -47,7 +47,7 @@ class KatSpider(BaseSpider):
 	    item['age'] = item['age'][0].encode("utf-8").replace("\xc2\xa0", "")
             item['seed'] = entry.select('td[5]/text()').extract()  
             item['leech'] = entry.select('td[6]/text()').extract()
-	    print "emitting new item with title=", item['title']
+	    #print "emitting new item with title=", item['title']
 	    #items.append(item)
 	    yield item
 	
@@ -62,7 +62,8 @@ class KatSpider(BaseSpider):
 	    #change category
 	    if self.cat_idx < len(self.categories) - 1:
 		self._page = 0
-	        self.current_category = self.categories[self.cat_idx + 1] 
+                self.cat_idx += 1
+	        self.current_category = self.categories[self.cat_idx] 
 	    else:
                 raise CloseSpider("done with kat.ph site")
 
