@@ -1,0 +1,29 @@
+delimiter $$
+
+CREATE TABLE `torrent` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `t_website` varchar(45) COLLATE utf8_bin DEFAULT NULL,
+  `t_category` varchar(20) COLLATE utf8_bin DEFAULT NULL,
+  `t_title` text COLLATE utf8_bin,
+  `t_url` text COLLATE utf8_bin,
+  `t_sizeType` varchar(5) COLLATE utf8_bin DEFAULT NULL,
+  `t_torrent` text COLLATE utf8_bin,
+  `t_size` varchar(10) COLLATE utf8_bin DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin$$
+
+CREATE TABLE `torrent_datetime` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `torrent_id` int(11) unsigned NOT NULL,
+  `datetime_id` int(11) unsigned NOT NULL,
+  `age` varchar(30) DEFAULT NULL,
+  `leechers` varchar(10) DEFAULT NULL,
+  `seeders` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tid_fk_idx` (`torrent_id`),
+  KEY `datetime_fk_idx` (`datetime_id`),
+  CONSTRAINT `torrent_datetime_fk` FOREIGN KEY (`datetime_id`) REFERENCES `date_time` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `torrent_id_fk` FOREIGN KEY (`torrent_id`) REFERENCES `torrent` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1$$
+
+
