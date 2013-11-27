@@ -41,6 +41,3 @@ def scrape_torrent_file(torrent_file_name):
     print scrape_result
     return scrape_result
 
- 
-if __name__ == "__main__":
-     scrape_torrent_file(sys.argv[1]) 

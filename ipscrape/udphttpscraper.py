@@ -26,16 +26,17 @@ def scrape_tracker( tracker_urls, info_hash):
             #url_parse = urlparse(tracker.replace("announce", "scrape"))
             #tracker.replace(tracker[tracker.rindex("/")+1:], "scrape")
             #url_parse = urlparse(tracker)
-	        return http_announce(url_parse, info_hash)
+	        result_IPs = set(result_IPs.union(set(http_announce(url_parse, info_hash))))
             else:
                 raise RuntimeError("Unknown tracker scheme: %s" % url_parse.scheme)
 
         except IOError as e:
             print "I/O error({0}): {1}".format(e.errno, e.strerror)
+            print "error in scraping tracker", e
             continue
-        #except:
-            # print "Error:", sys.exc_info()[0]
-    print "length of set=", len(result_IPs) 
+        except:
+            print "Error: ", sys.exc_info()[0]
+    #print "length of set=", len(result_IPs) 
     return result_IPs             
 
 
@@ -46,12 +47,12 @@ def scrape_tracker_udp(parsed_tracker, info_hash):
          parsed_tracker: parsed tracker url
          info hash: the info hash provided to query tracker for
      """
-     print "Scraping UDP %s for hash %s " % (parsed_tracker.geturl(), info_hash)
+     #print "Scraping UDP %s for hash %s " % (parsed_tracker.geturl(), info_hash)
 
      xaction_id = "\x00\x00\x04\x12\x27\x10\x19\x70"
      connection_id = "\x00\x00\x04\x17\x27\x10\x19\x80"
      _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-     _socket.settimeout(8)
+     _socket.settimeout(5)
      conn = (socket.gethostbyname(parsed_tracker.hostname), parsed_tracker.port)
 
      #Get connection id
@@ -79,18 +80,18 @@ def scrape_tracker_udp(parsed_tracker, info_hash):
 
 
 def http_scrape(parsed_tracker, info_hash):
-    print "Scraping HTTP: %s for hash %s" % (parsed_tracker.geturl(), info_hash)
+    #print "Scraping HTTP: %s for hash %s" % (parsed_tracker.geturl(), info_hash)
    
     qs = [] #querystring
     
     url_param = binascii.a2b_hex(info_hash)
     qs.append(("info_hash", url_param))
 
-    print "url_param", url_param
+    #print "url_param", url_param
     
     qs = urllib.urlencode(qs)    
     url = urlunsplit((parsed_tracker.scheme, parsed_tracker.netloc, parsed_tracker.path, qs, parsed_tracker.fragment))
-    print "url", url
+    #print "url", url
     
     try:
         handle = urllib.urlopen(url)
@@ -99,9 +100,9 @@ def http_scrape(parsed_tracker, info_hash):
             raise RuntimeError("%s status code returned. handle error" % handle.getcode())
 
         _read = handle.read()   
-        print "_read result=", _read
+        #print "_read result=", _read
         decoded = bencode.bdecode(_read)
-        print "decoded handle=", decoded
+        #print "decoded handle=", decoded
     
 
         result = {}
@@ -118,7 +119,7 @@ def http_scrape(parsed_tracker, info_hash):
 
 
 def http_announce(parsed_tracker, info_hash):
-    print "Scraping HTTP: %s for hash %s" % (parsed_tracker.geturl(), info_hash)
+    #print "Scraping HTTP: %s for hash %s" % (parsed_tracker.geturl(), info_hash)
    
     qs = [] #querystring
     
@@ -129,7 +130,7 @@ def http_announce(parsed_tracker, info_hash):
     uploaded = 0
     event = 1 # 1 for start
     ip = 0 # defualt to use client IP
-    numwant = 1 ## we want 200 IP addresses
+    numwant = 2 ## we want 200 IP addresses
      
      
     
@@ -140,13 +141,13 @@ def http_announce(parsed_tracker, info_hash):
     qs.append(("uploaded", uploaded))
     qs.append(("event", event))
     qs.append(("ip", ip))
-    qs.append(("numwant", numwant))
+    qs.append(("num_want", numwant))
 
-    print "url_param", url_param
+    #print "url_param", url_param
    
     qs = urllib.urlencode(qs)    
     url = urlunsplit((parsed_tracker.scheme, parsed_tracker.netloc, parsed_tracker.path, qs, parsed_tracker.fragment))
-    print "url", url
+    #print "url", url
     
     
     handle = urllib.urlopen(url)
@@ -154,23 +155,23 @@ def http_announce(parsed_tracker, info_hash):
     if handle.getcode() is not 200:
         raise RuntimeError("%s status code returned. handle error" % handle.getcode())
 
-    _read = handle.read()   
-    print "_read result=", _read
-    decoded = bencode.bdecode(_read)
-    print "decoded handle=", decoded
     
-
-    result = {}
-    for h, stats in decoded.iteritems():
-        d_hash = binascii.b2a_hex(h)
-        leechers = stats["incomplete"]
-        seeders = stats["complete"]
-        interval = stats["interval"]
-        mininterval = stats["min interval"]
-        peers = stats["peers"]
-        result[h] =  {"seeders" :seeders, "leechers": leechers, "interval": interval, "min interval": mininterval, "peers": peers}
-    print result
-    return result
+    _read = handle.read()   
+    #print "_read result=", _read
+    decoded = bencode.bdecode(_read)
+    #print "decoded handle=", decoded    
+    decoded_hex = binascii.b2a_hex(decoded['peers'])    
+    index = 0
+    result_list = []
+    while index < len(decoded_hex):
+        ip = int(decoded_hex[index: index + 8], 16)
+        index += 8
+        port = int(decoded_hex[index: index + 4], 16)
+        index += 4
+        result_list.append( (to_string(ip), ip, port) )
+          
+    #print "result from http", result_list
+    return result_list
     
     
 
@@ -253,7 +254,6 @@ def udp_create_announce_request(connection_id, info_hash, num_peers):
 
 
 def udp_parse_announce_response(buf, sent_xaction_id, info_hash, num_peers):
-    print "buf size=", len(buf)
     if len(buf) < 16:
         raise RuntimeError("Wrong response length while scraping %s" % len(buf))
     
@@ -286,7 +286,7 @@ def udp_parse_announce_response(buf, sent_xaction_id, info_hash, num_peers):
                        
         except:
             pass      
-        print "num of ips is = ", len(result['peers'])
+        #print "num of ips is = ", len(result['peers'])
         ips = result["peers"]
         #return result
         return ips
@@ -334,7 +334,7 @@ def udp_parse_scrape_response( buf, sent_xaction_id, info_hash):
         offset += 4
         leeches = struct.unpack_from("!i", buf, offset)[0]
 	
-        print "buffer size =", len(buf)       
+        #print "buffer size =", len(buf)       
          
         offset += 4
         result = {"seeds" : seeds, "leeches": leeches, "complete": complete}
