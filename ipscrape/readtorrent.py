@@ -10,7 +10,7 @@ def get_decoded_indexer_response(url, referer=None):
     """ return curl output download of torrent file """
     agent="'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070802 SeaMonkey/1.1.4)'"
     proc = None
-    if "seedpeer" in url:
+    if referer:
         proc = subprocess.Popen([
 "curl", "--globoff", "--compressed", "-A", agent, "-L", "--post302", "--referer", referer  ,  url], stdout= subprocess.PIPE)
     else:
