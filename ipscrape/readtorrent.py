@@ -10,12 +10,13 @@ def get_decoded_indexer_response(url, referer=None):
     """ return curl output download of torrent file """
     agent="'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.6) Gecko/20070802 SeaMonkey/1.1.4)'"
     proc = None
+    timeout = "120" #seconds timeout for whole operation
     if referer:
         proc = subprocess.Popen([
-"curl", "--globoff", "--compressed", "-A", agent, "-L", "--post302", "--referer", referer  ,  url], stdout= subprocess.PIPE)
+"curl", "--globoff", "--compressed", "-A", agent, "-L", "--post302", "--referer", referer  , "--max-time", timeout, url], stdout= subprocess.PIPE)
     else:
         proc = subprocess.Popen([
-"curl", "--globoff", "--compressed", "-A", agent, "-L", "--post302", url], stdout= subprocess.PIPE)
+"curl", "--globoff", "--compressed", "-A", agent, "-L", "--post302", "--max-time", timeout, url], stdout= subprocess.PIPE)
     out, err = proc.communicate()
     return out
 
@@ -51,8 +52,8 @@ def get_announceList(meta_info):
 
 if __name__ == "__main__":
     inp = sys.argv[1]
-    inp2 = sys.argv[2]
-    u = get_decoded_indexer_response(inp, inp2)
+    #inp2 = sys.argv[2]
+    u = get_decoded_indexer_response(inp)
     #v = test_seedpeer_urllib(inp) 
     print u
     print "decode ", bencode.bdecode(u)    
