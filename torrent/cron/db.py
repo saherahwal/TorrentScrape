@@ -44,13 +44,10 @@ def main(argv=None):
 		t_time = dt[4] + "00"
                 query = "INSERT INTO date_time(t_date, t_time) VALUES(date('%s'),time('%s'));" % (t_date, t_time)
 		cur.execute(query)
-		cur.execute("COMMIT;")
 		query = "SELECT id from date_time where t_date = date('%s') AND t_time = time('%s')" % (t_date, t_time)
 		cur.execute(query)
 		dt_id = int(cur.fetchone()[0])
 		
-	      	cur.execute("START TRANSACTION;")
-		cur.execute("BEGIN;")
 	        for line in lines:
 			try:
 				line = [word.replace("'", "*") for word in line.split(",")]
