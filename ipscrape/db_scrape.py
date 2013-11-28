@@ -12,7 +12,7 @@ import datetime
 def get_next_url(cursor):
     """ given the DB cursor from connection.cursor() call, yields the next url in the torrent DB"""
         
-    query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%';"
+    query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%' AND id > 10000 AND id < 10050;"
     try:
         cursor.execute(query)
         for row in cursor:
@@ -31,7 +31,6 @@ def do_location_lookup(cursor, ip):
 
              ip: int-32 of the ip address for location lookup
     """
-    assert type(ip) == int
     query = "SELECT * FROM ip2location_db9 WHERE %s >= `ip_from` AND %s <= `ip_to`;" % (str(ip), str(ip))
     try:
         cursor.execute(query)
@@ -75,7 +74,7 @@ def insert_torrent_location(cursor, torrent_id, datetime_id, ip, location):
                 format is (ip_from, ip_to, country_code, country_name, region, city, latitude, longitude, zip)
     """
     query = "INSERT INTO torrent_location (`torrent_id`, `ip`, `country_code`, `country_name`, `region_name`, \
-`city_name`, `latitude`, `longitude`, `zip_code`, `ipv4`, `datetime_id`) VALUES ( %d, %d, '%s', '%s', '%s', '%s', %u, %u, '%s', '%s', %d);" % (torrent_id, ip, location[2], location[3], location[4], location[5], location[6], location[7], location[8], to_string(ip), datetime_id)
+`city_name`, `latitude`, `longitude`, `zip_code`, `ipv4`, `datetime_id`) VALUES ( %d, %d, '%s', '%s', '%s', '%s', %u, %u, '%s', '%s', %d);" % (torrent_id, ip, location[2], location[3].replace("'", "''"), location[4].replace("'", "''"), location[5].replace("'", "''"), location[6], location[7], location[8], to_string(ip), datetime_id)
     #print "the query is ", query
     try:
         cursor.execute("START TRANSACTION;")
@@ -87,6 +86,28 @@ def insert_torrent_location(cursor, torrent_id, datetime_id, ip, location):
         print "Could not add new location row to `torrent_location` table: ", e  
            
     
+def insert_many_torrent_locations(cursor, data):
+    """ insert many locations per torrent at once
+
+        Args:
+             cursor: db cursor 
+             data: list of value lists to insert
+
+    """ 
+    query = "INSERT INTO torrent_location (`torrent_id`, `ip`, `country_code`, `country_name`, `region_name`,`city_name`, `latitude`, `longitude`, `zip_code`, `ipv4`, `datetime_id`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    try:
+        cursor.execute("START TRANSACTION;")
+        cursor.execute("BEGIN;")
+        cursor.executemany(query, data)
+        cursor.execute("COMMIT;")
+        print " added all locations to torrent with id=", data[0][0]
+
+    except Exception as e:
+        print "Could not add all locations for torrent in torrent_locations table: ", e
+
+
+
+
 def fix_url(url):
     """ pirates bay hacky fix for url since it is stored incorrectly """
     if len(url) > 2:
@@ -176,17 +197,26 @@ def main(argv=None):
                     
                         #print "dt_found=", dt_lookup[0]
                     dt_id = dt_lookup[0] ##datetime id or timestamp id
-                    #cur_datetime.close()
- 
-                    while scrape_ip_res !=  set([]):
+                    
+                    
+                    loc_data = [] ##locations data to insert as batch
+                    while scrape_ip_res != set([]):
                         cur_lookup = con_lookup.cursor()
                         ip_tup = scrape_ip_res.pop()
                         ip = ip_tup[1]
-                        #print "ip is", ip
-                        location = do_location_lookup(cur_lookup, ip)
-                        loc = location.next()
-                        #print "location =",loc
-			insert_torrent_location(cur_insert, torr_data[1], dt_id, ip, loc)
+                        _location =do_location_lookup(cur_lookup, ip)
+                        location = _location.next()
+                        d=(torr_data[1], ip, location[2], location[3].replace("'", "''"), location[4].replace("'", "''"), location[5].replace("'", "''"), location[6], location[7], location[8], to_string(ip), dt_id)                 
+                        loc_data.append(d)
+                    insert_many_torrent_locations(cur_insert, loc_data)
+                    
+                    #while scrape_ip_res !=  set([]):
+                        #cur_lookup = con_lookup.cursor()
+                        #ip_tup = scrape_ip_res.pop()
+                        #ip = ip_tup[1]
+                        #location = do_location_lookup(cur_lookup, ip)
+                        #loc = location.next()
+			#insert_torrent_location(cur_insert, torr_data[1], dt_id, ip, loc)
 
                 cur_datetime.close()
                 cur_insert.close()                                     
