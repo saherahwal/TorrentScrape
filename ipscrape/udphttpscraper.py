@@ -52,7 +52,7 @@ def scrape_tracker_udp(parsed_tracker, info_hash):
      xaction_id = "\x00\x00\x04\x12\x27\x10\x19\x70"
      connection_id = "\x00\x00\x04\x17\x27\x10\x19\x80"
      _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-     _socket.settimeout(10)
+     _socket.settimeout(5)
      conn = (socket.gethostbyname(parsed_tracker.hostname), parsed_tracker.port)
 
      #Get connection id
