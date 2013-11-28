@@ -12,7 +12,7 @@ import datetime
 def get_next_url(cursor):
     """ given the DB cursor from connection.cursor() call, yields the next url in the torrent DB"""
         
-    query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%' AND id > 10000 AND id < 10050;"
+    query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%';"
     try:
         cursor.execute(query)
         for row in cursor:

@@ -31,11 +31,11 @@ def scrape_tracker( tracker_urls, info_hash):
                 raise RuntimeError("Unknown tracker scheme: %s" % url_parse.scheme)
 
         except IOError as e:
-            print "I/O error({0}): {1}".format(e.errno, e.strerror)
+            #print "I/O error({0}): {1}".format(e.errno, e.strerror)
             print "error in scraping tracker", e
             continue
         except:
-            print "Error: ", sys.exc_info()[0]
+            print "Error: ", sys.exc_info()[0] 
     #print "length of set=", len(result_IPs) 
     return result_IPs             
 
@@ -52,7 +52,7 @@ def scrape_tracker_udp(parsed_tracker, info_hash):
      xaction_id = "\x00\x00\x04\x12\x27\x10\x19\x70"
      connection_id = "\x00\x00\x04\x17\x27\x10\x19\x80"
      _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-     _socket.settimeout(5)
+     _socket.settimeout(10)
      conn = (socket.gethostbyname(parsed_tracker.hostname), parsed_tracker.port)
 
      #Get connection id
