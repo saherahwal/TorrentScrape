@@ -3,14 +3,15 @@ import MySQLdb.cursors as cursors
 import subprocess
 import sys
 import datetime
+import time
 
-COMMON = ["the", "a", "an", "and", "avi", "mpg", "mp3"]
+COMMON = ["the", "a", "an", "and", "avi", "mpg", "mp3", "rar", "-"] + [str(x) for x in range(0,9)]
 
 class Torrent:
     def __init__(self, row):
         self.id = row[0]
         self.title = row[1].strip().lower()
-        self.size = row[2].strip()
+        self.size = float(row[2].strip())
         self.sizetype = row[3].strip().lower()
         self.torrent = row[4].strip().lower()
         self.url = row[5].strip().lower()
@@ -96,25 +97,32 @@ def main(argv=None):
         cur = con_db.cursor()
         
         for torr_data in get_torrents(cur):
+	    t = time.time()
             record_score = 0.0
             record_id = ""
             #try:
             t_orig = Torrent(torr_data)
+	    print t_orig.id
             cur_t = con_torrent.cursor()
             maxscore = 10.0
-            words = t_orig.title.split(" ") + t_orig.title.split(".")
-            for word in t_orig.title.split(" "):
-                if word not in COMMON:
-                    for data in get_torrent_by_name(cur_t, word):
-                        t_check = Torrent(data)
+	    words = t_orig.title.split(" ")
+	    if t_orig.title.count(" ") < t_orig.title.count("."):
+            	words = t_orig.title.split(".")
+#	    else:
+#		words += t_orig.title.split(".")
+	    words = [word for word in words if word not in COMMON]
+	    print words
+            for word in words:
+	    	for data in get_torrent_by_name(cur_t, word):
+                	t_check = Torrent(data)
                         if t_check.id != t_orig.id:
                             if t_orig.title == t_check.title and \
                                 t_orig.size == t_check.size:
                                     print t_orig.id, t_check.id
                             elif levenshtein(t_orig.title, t_check.title) < 10.0 \
-                                and t_orig.size == t_check.size:
+                                and t_orig.size < t_check.size + 1 and t_orig.size > t_check.size - 1:
                                     print t_orig.id, t_check.id
-
+	    print time.time() - t
         
             cur_t.close()
              
