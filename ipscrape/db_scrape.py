@@ -9,10 +9,11 @@ from readtorrent import *
 import datetime
 
 
-def get_next_url(cursor):
+def get_next_url(cursor, from_id, to_id):
     """ given the DB cursor from connection.cursor() call, yields the next url in the torrent DB"""
-        
-    query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%';"
+    
+    #query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%' and t_category like '%Movies%' and id > 369784;"
+    query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%' and id > "+ from_id + " and id < "+ to_id  +";"
     try:
         cursor.execute(query)
         for row in cursor:
@@ -149,7 +150,7 @@ def main(argv=None):
         cur_select = con_select.cursor()
         cur_dtinsert = con_dt_insert.cursor() 
        
-        db_iter = get_next_url(cur_select) #DB iterator
+        db_iter = get_next_url(cur_select, argv[1], argv[2]) #DB iterator
                        
         for torr_data in db_iter:            
             cur_datetime = con_datetime.cursor()
