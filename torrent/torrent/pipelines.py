@@ -37,10 +37,10 @@ class TorrentPipeline(object):
 	s = ""
         c = ","
 	if len(item['title']) > 0:
-		for i in item:
+	 	for i in item:
 			if isinstance(item[i], list):
 				item[i] = item[i][0]
-			s += item[i].replace(",", "*") + ","
+		#	s += item[i].replace(",", "*") + ","
 	      	
                 item['website'] = item['website'].replace(",", "*")
                 item['category'] = item['category'].replace(",", "*")

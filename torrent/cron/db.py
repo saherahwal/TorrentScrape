@@ -8,7 +8,14 @@ import shutil
   
 import re
 
-DIR_PATH = '/home/neo/TorrentScrape/torrent/torrents'
+#DIR_PATH = '/home/neo/TorrentScrape/torrent/torrents'
+
+DIR_PATH = '/home/saher/MEng/TorrentScrape/torrent/torrents/'
+host = 'localhost'
+user = 'saher'
+passwd = 'saher'
+db = 'TorrentScrapeDB'
+
 
 def getTorrentId(cur, title, url, website):
     query = "SELECT id FROM torrent where t_title = '%s' AND t_website = '%s' AND t_url = '%s';" % (title, website, url)
@@ -17,6 +24,16 @@ def getTorrentId(cur, title, url, website):
     if t_id == None:
 	return None
     return int(t_id[0])
+
+
+def getDateTimeId(cur, t_date, t_time):
+    query = "SELECT id FROM date_time WHERE t_date = date('%s') AND t_time = time('%s');" % (t_date, t_time)
+    cur.execute(query)
+    dtId = cur.fetchone()
+    if dtId == None:
+        return None
+    return int(dtId[0])
+
   
 def main(argv=None):
       
@@ -29,7 +46,7 @@ def main(argv=None):
     files = getFiles()
   
     try:
-        con = mdb.connect(host='localhost', user='neo', passwd='1234', db='6885')
+        con = mdb.connect(host=host, user=user, passwd=passwd, db=db)
 
 	for filename in files:
 		f = open(DIR_PATH + "/" + filename, "r")
@@ -42,11 +59,15 @@ def main(argv=None):
 		dt = filename[:filename.rindex(".")].split("-")
 		t_date = dt[3] + "-" + dt[1] + "-" + dt[2]
 		t_time = dt[4] + "00"
-                query = "INSERT INTO date_time(t_date, t_time) VALUES(date('%s'),time('%s'));" % (t_date, t_time)
-		cur.execute(query)
-		query = "SELECT id from date_time where t_date = date('%s') AND t_time = time('%s')" % (t_date, t_time)
-		cur.execute(query)
-		dt_id = int(cur.fetchone()[0])
+                
+                dt_id = getDateTimeId(cur, t_date, t_time)
+                if(dt_id == None):
+                	query = "INSERT INTO date_time(t_date, t_time) VALUES(date('%s'),time('%s'));" % (t_date, t_time)
+			cur.execute(query)
+                        dt_id = getDateTimeId(cur, t_date, t_time)
+		#query = "SELECT id from date_time where t_date = date('%s') AND t_time = time('%s')" % (t_date, t_time)
+		#cur.execute(query)
+		#dt_id = int(cur.fetchone()[0])
 		
 	        for line in lines:
 			try:
