@@ -16,13 +16,16 @@ class SeedpeerSpider(BaseSpider):
 
     current_verVal = ver_vals[1]
     pages_num = 0
-    _page = 1
+    _page = 1 #TODO: changed temo since timeout on page 1
     url_prefix = 'http://www.seedpeer.me'
-
+    start_url_default = url_prefix + '/verified.html'
 
     def __init__(self, *args, **kwargs):
         super(SeedpeerSpider, self).__init__(*args, **kwargs)
-        self.start_urls = [self.url_prefix + '/verified/'
+        if self._page == 1:
+            self.start_urls = [self.start_url_default]
+        else:
+            self.start_urls = [self.url_prefix + '/verified/'
                     + str(self.current_verVal) + '/' 
                     + str(self._page)+ '.html']
    

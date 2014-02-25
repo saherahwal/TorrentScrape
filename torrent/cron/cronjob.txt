@@ -1,2 +1,2 @@
-0 */2 * * * /home/saher/MEng/TorrentScrape/torrent/cron/script.sh
+15 */2 * * * /home/saher/MEng/TorrentScrape/torrent/cron/script.sh
 59 23 * * * /home/saher/MEng/TorrentScrape/torrent/cron/script-db.sh

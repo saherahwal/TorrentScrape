@@ -9,6 +9,12 @@ from readtorrent import *
 import datetime
 
 
+host = 'localhost'
+user = 'saher'
+passwd = 'saher'
+db = 'TorrentScrapeDB'
+
+
 def get_next_url(cursor, from_id, to_id):
     """ given the DB cursor from connection.cursor() call, yields the next url in the torrent DB"""
     
@@ -128,10 +134,10 @@ def main(argv=None):
     con_insert = None
     con_datetime = None
     con_dt_insert = None
-    host = "tal.xvm.mit.edu"
-    user = "neo"
-    passwd = "1234"
-    db = "6885"
+    #host = "tal.xvm.mit.edu"
+    #user = "neo"
+    #passwd = "1234"
+    #db = "6885"
     
 
     try:
