@@ -12,9 +12,12 @@ class KatSpider(BaseSpider):
     categories = ['music', 'books', 'tv', 'games', 'applications', 'movies', 'other']
  
 
-    url_prefix = 'http://kat.ph'
-    url_mid = '/usearch/category%3A'
-    url_suffix = '/?field=time_add&sorder=desc'
+    #url_prefix = 'http://kat.ph'
+    #url_mid = '/usearch/category%3A'
+    #url_suffix = '/?field=time_add&sorder=desc'
+    url_prefix = 'http://kickass.to/'
+    #url_mid = '/usearch/category%3A'
+    #url_suffix = '/?field=time_add&sorder=desc'
     pages_num = 0
     _page = 1
     cat_idx = 0
@@ -24,9 +27,13 @@ class KatSpider(BaseSpider):
     
     def __init__(self, *args, **kwargs):
         super(KatSpider, self).__init__(*args, **kwargs)
-	self.start_urls = ['http://kat.ph/usearch/category%3A'   
+	#self.start_urls = ['http://kat.ph/usearch/category%3A'   
+   	#	+ self.current_category + '/1'    
+   	#	+ '/?field=time_add&sorder=desc'  	
+	#]	
+	self.start_urls = ['http://kickass.to/'   
    		+ self.current_category + '/1'    
-   		+ '/?field=time_add&sorder=desc'  	
+   		#+ '/?field=time_add&sorder=desc'  	
 	]	
 
 
@@ -47,7 +54,7 @@ class KatSpider(BaseSpider):
 	    item['age'] = item['age'][0].encode("utf-8").replace("\xc2\xa0", "")
             item['seed'] = entry.select('td[5]/text()').extract()  
             item['leech'] = entry.select('td[6]/text()').extract()
-	    #print "emitting new item with title=", item['title']
+	    print "emitting new item with title=", item['title']
 	    #items.append(item)
 	    yield item
 	
@@ -67,7 +74,8 @@ class KatSpider(BaseSpider):
 	    else:
                 raise CloseSpider("done with kat.ph site")
 
-	yield Request( self.url_prefix +  self.url_mid + self.current_category + '/' + str(self._page)  + self.url_suffix, callback=self.parse)
+	#yield Request( self.url_prefix +  self.url_mid + self.current_category + '/' + str(self._page)  + self.url_suffix, callback=self.parse)
+	yield Request( self.url_prefix +  self.current_category + '/' + str(self._page) , callback=self.parse)
 
 	
 	

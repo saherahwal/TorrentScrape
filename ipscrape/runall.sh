@@ -1,4 +1,5 @@
 #!/bin/bash
+cd /home/saher/MEng/TorrentScrape/ipscrape
 from=$1
 to=$2
 while [ $from -lt $to ];

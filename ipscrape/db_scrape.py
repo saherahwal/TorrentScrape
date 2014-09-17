@@ -19,7 +19,7 @@ def get_next_url(cursor, from_id, to_id):
     """ given the DB cursor from connection.cursor() call, yields the next url in the torrent DB"""
     
     #query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%' and t_category like '%Movies%' and id > 369784;"
-    query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%' and id > "+ from_id + " and id < "+ to_id  +";"
+    query = "SELECT t_torrent, id, t_url FROM torrent WHERE t_torrent NOT LIKE 'magnet:?%' and id >= "+ from_id + " and id < "+ to_id  +";"
     try:
         cursor.execute(query)
         for row in cursor:
@@ -154,7 +154,7 @@ def main(argv=None):
         print "con_insert success"
 
         cur_select = con_select.cursor()
-        cur_dtinsert = con_dt_insert.cursor() 
+        #cur_dtinsert = con_dt_insert.cursor() 
        
         db_iter = get_next_url(cur_select, argv[1], argv[2]) #DB iterator
                        
@@ -207,6 +207,7 @@ def main(argv=None):
                     
                     
                     loc_data = [] ##locations data to insert as batch
+                    cur_lookup = None
                     while scrape_ip_res != set([]):
                         cur_lookup = con_lookup.cursor()
                         ip_tup = scrape_ip_res.pop()
@@ -227,14 +228,15 @@ def main(argv=None):
 
                 cur_datetime.close()
                 cur_insert.close()                                     
-             
+                if(cur_lookup):
+                    cur_lookup.close();     
                    
             except Exception, e:
                 print "Error: ", e
                 print "ERROR"
                 continue    
         cur_select.close()
-        cur_dtinsert.close()                    
+        #cur_lookup.close()                    
             
     except mdb.Error, e:
          print "Error %d: %s " %  (e.args[0], e.args[1])         
